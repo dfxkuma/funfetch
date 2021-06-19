@@ -1,35 +1,29 @@
 import ast
 import astunparse
 import traceback
-import json
 from .model import AnyType, CompileOutput
 from .errors import CompileError
 from .utils import insert_returns
 
 
 class Converter:
-    def __init__(self, data=None):
-        self._data = data
-        self.datastring = {"raw": 0, type: "int"}
-        self.datatype = None
-
     @staticmethod
-    async def converter(self, data: dict):
+    async def converter(data: dict):
         if data.get("type") == "str":
             return data.get("raw")
         elif data.get("type") == "int":
             return int(data.get("raw"))
         elif data.get("type") == "bytes":
             return bytes(data.get("raw"), encoding="utf-8")
-        elif isinstance(data, list):
+        elif data.get("type") == "list":
             return ast.literal_eval(data.get("raw"))
-        elif isinstance(data, tuple):
+        elif data.get("type") == "tuple":
             return ast.literal_eval(data.get("raw"))
-        elif isinstance(data, float):
+        elif data.get("type") == "float":
             return ast.literal_eval(data.get("raw"))
-        elif isinstance(data, bool):
+        elif data.get("type") == "bool":
             return ast.literal_eval(data.get("raw"))
-        elif isinstance(data, dict):
+        elif data.get("type") == "dict":
             return ast.literal_eval(data.get("raw"))
         else:
             output = await compile(fn_name="funfetch_compiler", code=data.get("raw"))
@@ -76,36 +70,54 @@ class Converter:
     @classmethod
     async def return_dict(cls, jsondata: dict):
         return_dict_data = {}
-        for x, y in dict.keys(), dict.values():
-            data = await cls.converter(y)
+        for x, y in zip(jsondata.keys(), jsondata.values()):
+            data = await cls.converter(data=jsondata[x])
             return_dict_data[x] = data
         return return_dict_data
 
-    async def check(self):
-        if isinstance(self._data, str):
-            self.datatype = str
-            self.datastring = {"raw": str(self._data), type: "str"}
-        elif isinstance(self._data, int):
-            self.datatype = int
-            self.datastring = {"raw": str(self._data), type: "int"}
-        elif isinstance(self._data, bytes):
-            self.datatype = bytes
-            self.datastring = {"raw": str(self._data.decode("utf-8")), type: "bytes"}
-        elif isinstance(self._data, list):
-            self.datatype = list
-            self.datastring = {"raw": str(self._data), type: "list"}
-        elif isinstance(self._data, tuple):
-            self.datatype = tuple
-            self.datastring = {"raw": str(list(self._data)), type: "tuple"}
-        elif isinstance(self._data, float):
-            self.datatype = float
-            self.datastring = {"raw": str(self._data), type: "float"}
-        elif isinstance(self._data, bool):
-            self.datatype = bool
-            self.datastring = {"raw": str(self._data), type: "bool"}
-        elif isinstance(self._data, dict):
-            self.datatype = dict
-            self.datastring = {"raw": str(self._data), type: "dict"}
+    @classmethod
+    async def converter_string(cls, jsondata: dict):
+        return_dict_data = {}
+        for x, y in zip(jsondata.keys(), jsondata.values()):
+            data = await cls.check(obj=y)
+            return_dict_data[x] = data
+        return return_dict_data
+
+    @classmethod
+    async def check(cls, obj):
+        if isinstance(obj, str):
+            datatype = str
+            datastring = {"raw": str(obj), "type": "str"}
+            return datastring
+        elif isinstance(obj, int):
+            datatype = int
+            datastring = {"raw": str(obj), "type": "int"}
+            return datastring
+        elif isinstance(obj, bytes):
+            datatype = bytes
+            datastring = {"raw": str(obj.decode("utf-8")), "type": "bytes"}
+            return datastring
+        elif isinstance(obj, list):
+            datatype = list
+            datastring = {"raw": str(obj), "type": "list"}
+            return datastring
+        elif isinstance(obj, tuple):
+            datatype = tuple
+            datastring = {"raw": str(list(obj)), "type": "tuple"}
+            return datastring
+        elif isinstance(obj, float):
+            datatype = float
+            datastring = {"raw": str(obj), "type": "float"}
+            return datastring
+        elif isinstance(obj, bool):
+            datatype = bool
+            datastring = {"raw": str(obj), "type": "bool"}
+            return datastring
+        elif isinstance(obj, dict):
+            datatype = dict
+            datastring = {"raw": str(obj), "type": "dict"}
+            return datastring
         else:
-            self.datatype = AnyType
-            self.datastring = {"raw": str(self._data), type: "anytype"}
+            datatype = AnyType
+            datastring = {"raw": str(obj), "type": "anytype"}
+            return datastring
