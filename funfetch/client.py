@@ -83,7 +83,3 @@ class Client:
             return self.request(route, **kwargs)
 
         return recv.json()
-
-
-
-
