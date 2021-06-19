@@ -2,6 +2,7 @@ import asyncio
 import logging
 import typing
 
+from .errors import ConnectionError
 import aiohttp
 
 
@@ -39,17 +40,17 @@ class Client:
             The websocket connection to the server
         """
         self.session = aiohttp.ClientSession()
-
-        self.websocket = await self.session.ws_connect(
-            self.url, autoping=False, autoclose=False
-        )
-        return self.websocket
+        try:
+            self.websocket = await self.session.ws_connect(
+                self.url, autoping=False, autoclose=False
+            )
+            return self.websocket
+        except Exception as e:
+            raise ConnectionError(e)
 
     @property
     def url(self):
-        return "ws://{0.host}:{1}".format(
-            self, self.port
-        )
+        return "ws://{0.host}:{1}".format(self, self.port)
 
     async def request(self, route: str, **kwargs):
         """Make a request to the IPC server process.
