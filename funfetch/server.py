@@ -71,7 +71,9 @@ class Server:
 
             if not headers or headers.get("Authorization") != self.password:
                 response = {"error": "Invalid or no token provided.", "code": 403}
-                log.info("Received unauthorized request (Invalid or no token provided).")
+                log.info(
+                    "Received unauthorized request (Invalid or no token provided)."
+                )
             else:
                 if not route or route not in self.routes:
                     log.info("Received invalid request (Invalid or no endpoint given).")
