@@ -65,7 +65,7 @@ class Server:
             route = req.get("route")
             headers = req.get("headers")
 
-            if not headers or headers.get("Authorization") != self.secret_key:
+            if not headers or headers.get("Authorization") != self.password:
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
                 if not route or route not in self.routes:
