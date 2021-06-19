@@ -34,3 +34,9 @@ class CompileOutput:
         else:
             self.error_msg = error_msg
             self.error_type = error_type
+
+
+class DictObject:
+    def __init__(self, key: str, value: str):
+        self.key = key
+        self.value = value
