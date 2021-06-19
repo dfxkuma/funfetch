@@ -75,6 +75,7 @@ class Server:
                     arguments = (server_response,)
                     try:
                         ret = await self.routes[route](*arguments)
+                        print(route)
                         response = ret
                     except Exception as error:
                         response = {
@@ -99,20 +100,21 @@ class Server:
                     await websocket.send_json(response)
                     raise TypeError(error_response)
 
-        async def __start__(self, app, port: int):
-            """Starting IPC Server"""
-            runner = aiohttp.web.AppRunner(app)
-            await runner.setup()
+    async def __start__(self, app, port: int):
+        """Starting IPC Server"""
+        runner = aiohttp.web.AppRunner(app)
+        await runner.setup()
 
-            site = aiohttp.web.TCPSite(runner, self.host, port)
-            await site.start()
+        site = aiohttp.web.TCPSite(runner, self.host, port)
+        await site.start()
 
-        def start(self):
-            self.ipc_server = aiohttp.web.Application()
-            self.ipc_server.router.add_route("GET", "/", self.response)
-            self.loop.run_until_complete(self.__start__(self.ipc_server, self.port))
+    def start(self):
+        self.ipc_server = aiohttp.web.Application()
+        self.ipc_server.router.add_route("GET", "/", self.response)
+        self.loop.run_until_complete(self.__start__(self.ipc_server, self.port))
 
-        def run(self):
-            self.ipc_server = aiohttp.web.Application()
-            self.ipc_server.router.add_route("GET", "/", self.response)
-            return self.__start__(self.ipc_server, self.port)
+    def run(self):
+        self.ipc_server = aiohttp.web.Application()
+        self.ipc_server.router.add_route("GET", "/", self.response)
+        aiohttp.web.run_app(self.ipc_server, port=self.port)
+
