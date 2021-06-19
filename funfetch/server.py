@@ -72,9 +72,10 @@ class Server:
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = Response(req)
-                    arguments = (server_response,)
+                    r = server_response.to_dict().get("data")
+                    print(str(r))
                     try:
-                        ret = await self.routes[route](*arguments)
+                        ret = await self.routes[route](**r)
                         print(route)
                         response = ret
                     except Exception as error:
@@ -117,4 +118,3 @@ class Server:
         self.ipc_server = aiohttp.web.Application()
         self.ipc_server.router.add_route("GET", "/", self.response)
         aiohttp.web.run_app(self.ipc_server, port=self.port)
-
