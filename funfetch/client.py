@@ -1,8 +1,7 @@
 import asyncio
-import logging
-import typing
 
 from .errors import ConnectionError
+from .converter import Converter
 import aiohttp
 
 
@@ -52,6 +51,18 @@ class Client:
     def url(self):
         return "ws://{0.host}:{1}".format(self, self.port)
 
+    def __getattr__(self, item):
+        def inner(**kwargs):
+            return self.request(route=item, **kwargs)
+
+        return inner
+
+    def __getitem__(self, item):
+        def inner(**kwargs):
+            return self.request(route=item, **kwargs)
+
+        return inner
+
     async def request(self, route: str, **kwargs):
         """Make a request to the IPC server process.
 
@@ -64,10 +75,11 @@ class Client:
         """
         if not self.session:
             await self.connect()
+        payload_data = await Converter.converter_string(kwargs)
 
         payload = {
             "route": route,
-            "data": kwargs,
+            "data": payload_data,
             "headers": {"Authorization": self.password},
         }
 
@@ -78,15 +90,15 @@ class Client:
         if recv.type == aiohttp.WSMsgType.PING:
             await self.websocket.ping()
 
-            return await self.request(route, **kwargs)
+            return await self.request(route, payload_data)
 
         if recv.type == aiohttp.WSMsgType.PONG:
-            return await self.request(route, **kwargs)
+            return await self.request(route, payload_data)
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
             await self.session.close()
             await asyncio.sleep(5)
             await self.connect()
-            return self.request(route, **kwargs)
+            return self.request(route, payload_data)
 
         return recv.json()
