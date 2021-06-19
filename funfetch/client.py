@@ -45,6 +45,12 @@ class Client:
         )
         return self.websocket
 
+    @property
+    def url(self):
+        return "ws://{0.host}:{1}".format(
+            self, self.port
+        )
+
     async def request(self, route: str, **kwargs):
         """Make a request to the IPC server process.
 
