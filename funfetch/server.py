@@ -1,7 +1,10 @@
 import aiohttp.web
 import asyncio
+import logging
 from .model import Response
 from .converter import Converter
+
+log = logging.getLogger("FunFetch")
 
 
 class Server:
@@ -68,18 +71,22 @@ class Server:
 
             if not headers or headers.get("Authorization") != self.password:
                 response = {"error": "Invalid or no token provided.", "code": 403}
+                log.info("Received unauthorized request (Invalid or no token provided).")
             else:
                 if not route or route not in self.routes:
+                    log.info("Received invalid request (Invalid or no endpoint given).")
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = Response(req)
                     r = server_response.to_dict().get("data")
                     r = await Converter.return_dict(r)
+                    log.info(f"Received request: {route}")
 
                     try:
                         ret = await self.routes[route](**r)
                         response = ret
                     except Exception as error:
+                        log.info(f"Received request: {route}, return Error")
                         response = {
                             "error": "IPC route raised error of type {}".format(
                                 type(error).__name__
@@ -98,6 +105,7 @@ class Server:
                         " If you are trying to send a discord.py object,"
                         " please only send the data you need."
                     )
+                    log.error(error_response)
                     response = {"error": error_response, "code": 500}
                     await websocket.send_json(response)
                     raise TypeError(error_response)
