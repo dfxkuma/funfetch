@@ -1,0 +1,89 @@
+import asyncio
+import logging
+import typing
+
+import aiohttp
+
+
+class Client:
+    """
+    It is a client connecting to the ipc server.
+
+    Parameters
+    ----------
+    host: str
+        This is the host of the ipc server.
+    port: int
+        This is the port on the ipc server.
+    password: Union[str, bytes]
+        This is the password used to connect to the ipc server. The default server password is 1234.
+    """
+
+    def __init__(
+        self, host: str = "localhost", port: int = 8000, password: str = "1234"
+    ):
+        self.host = host
+        self.port = port
+
+        self.password = password
+
+        self.session = None
+        self.websocket = None
+
+    async def connect(self):
+        """Attempts to connect to the server
+
+        Returns
+        -------
+        :class:`~aiohttp.ClientWebSocketResponse`
+            The websocket connection to the server
+        """
+        self.session = aiohttp.ClientSession()
+
+        self.websocket = await self.session.ws_connect(
+            self.url, autoping=False, autoclose=False
+        )
+        return self.websocket
+
+    async def request(self, route: str, **kwargs):
+        """Make a request to the IPC server process.
+
+        Parameters
+        ----------
+        route: str
+            he endpoint to request on the server
+        **kwargs
+            The data to send to the endpoint
+        """
+        if not self.session:
+            await self.connect()
+
+        payload = {
+            "route": route,
+            "data": kwargs,
+            "headers": {"Authorization": self.password},
+        }
+
+        await self.websocket.send_json(payload)
+
+        recv = await self.websocket.receive()
+
+        if recv.type == aiohttp.WSMsgType.PING:
+            await self.websocket.ping()
+
+            return await self.request(route, **kwargs)
+
+        if recv.type == aiohttp.WSMsgType.PONG:
+            return await self.request(route, **kwargs)
+
+        if recv.type == aiohttp.WSMsgType.CLOSED:
+            await self.session.close()
+            await asyncio.sleep(5)
+            await self.connect()
+            return self.request(route, **kwargs)
+
+        return recv.json()
+
+
+
+
