@@ -1,6 +1,7 @@
 import aiohttp.web
 import asyncio
 from .model import Response
+from .converter import Converter
 
 
 class Server:
@@ -73,10 +74,10 @@ class Server:
                 else:
                     server_response = Response(req)
                     r = server_response.to_dict().get("data")
-                    print(str(r))
+                    r = await Converter.return_dict(r)
+
                     try:
                         ret = await self.routes[route](**r)
-                        print(route)
                         response = ret
                     except Exception as error:
                         response = {
