@@ -7,6 +7,8 @@ Remote execution of a simple function on the server
 
 All types of Python support objects.
 
+### 이 라이브러리는 지원 종료되었습니다
+
 ## Installation
 
 ```bash
